@@ -106,7 +106,7 @@ void adjust_FB(Tree *t)
     {
         int hl = height(t->left);
         int hr = height(t->right);
-        t->FB = hr - hl;
+        t->FB = abs(hr - hl);
 
         adjust_FB(t->left);
         adjust_FB(t->right);
@@ -240,130 +240,147 @@ int level_node(Tree *t, int cont, int x)
     }
 }
 
-Tree *RotacaoEsq(Tree *t)
+Tree *rotacaoleftSimples(Tree *t)
+{
+
+    Tree *aux = t;
+    Tree *aux2 = aux->right;
+
+    aux->right = aux2->left;
+    aux2->left = aux;
+
+    if (aux2->FB == 1)
+    {
+        aux->FB = 0;
+        aux2->FB = 0;
+    }
+    else
+    {
+        aux->FB = 1;
+        aux2->FB = -2;
+    }
+
+    t = aux2;
+    return t;
+}
+
+Tree *rotacaoleftDupla(Tree *t)
+{
+
+    Tree *aux = t;
+    Tree *aux2 = aux->right;
+    Tree *aux3 = aux2->left;
+
+    aux2->left = aux3->right;
+    aux->right = aux3->left;
+    aux3->left = aux;
+    aux3->right = aux2;
+
+    switch (aux3->FB)
+    {
+    case -1:
+        aux->FB = 0;
+        aux2->FB = 1;
+        break;
+    case 0:
+        aux->FB = 0;
+        aux2->FB = 0;
+        break;
+    case +1:
+        aux->FB = -1;
+        aux2->FB = 0;
+        break;
+    }
+
+    aux3->FB = 0;
+    t = aux3;
+    return t;
+}
+
+Tree *rotacaoleft(Tree *t)
 {
     if (t->right->FB == -1)
-        t = RotacaoEsqDupla(t);
+        t = rotacaoleftDupla(t);
     else
-        t = RotacaoEsqSimples(t);
+        t = rotacaoleftSimples(t);
+
     return t;
 }
 
-Tree *RotacaoEsqSimples(Tree *t)
+Tree *rotacaorightSimples(Tree *t)
 {
-    Tree *a = t;
-    Tree *b = a->left;
-    a->left = b->left;
-    b->left = a;
-    if (b->FB == 1)
+
+    Tree *aux = t->left;
+    Tree *aux2 = t;
+
+    aux2->left = aux->right;
+    aux->right = aux2;
+
+    if (aux->FB == -1)
     {
-        a->FB = 0;
-        b->FB = 0;
+        aux->FB = 0;
+        aux2->FB = 0;
     }
     else
     {
-        a->FB = 1;
-        b->FB = -1;
+        aux->FB = 1;
+        aux2->FB = -1;
     }
-    t = b;
+
+    t = aux;
     return t;
 }
 
-Tree *RotacaoEsqDupla(Tree *t)
+Tree *rotacaorightDupla(Tree *t)
 {
-    Tree *a = t;
-    Tree *c = a->right;
-    Tree *b = c->left;
-    c->left = b->right;
-    a->right = b->left;
-    b->left = a;
-    b->right = c;
 
-    switch (b->FB)
+    Tree *aux = t;
+    Tree *aux2 = aux->left;
+    Tree *aux3 = aux2->right;
+
+    aux->left = aux3->right;
+    aux2->right = aux3->left;
+    aux3->left = aux2;
+    aux3->right = aux;
+
+    switch (aux3->FB)
     {
     case -1:
-        a->FB = 0;
-        c->FB = 1;
+        aux2->FB = 0;
+        aux->FB = 1;
         break;
     case 0:
-        a->FB = 0;
-        c->FB = 0;
+        aux2->FB = 0;
+        aux->FB = 0;
         break;
     case +1:
-        a->FB = -1;
-        c->FB = 0;
+        aux2->FB = -1;
+        aux->FB = 0;
         break;
     }
-    b->FB = 0;
-    t = b;
+
+    aux3->FB = 0;
+    t = aux3;
     return t;
 }
 
-Tree *RotacaoDir(Tree *t)
+Tree *rotacaoright(Tree *t)
 {
     if (t->left->FB == 1)
-        t = RotacaoDirDupla(t);
+        t = rotacaorightDupla(t);
     else
-        t = RotacaoDirSimples(t);
+        t = rotacaorightSimples(t);
+
     return t;
 }
 
-Tree *RotacaoDirSimples(Tree *t)
+Tree *inserir(Tree *t, int info, int *hMudou)
 {
-    Tree *a = t->left;
-    Tree *b = t;
-    t->left = a->right;
-    a->right = b;
-    if (a->FB == -1)
-    {
-        a->FB = 0;
-        b->FB = 0;
-    }
-    else
-    {
-        a->FB = 1;
-        b->FB = -1;
-    }
-    t = a;
-    return t;
-}
 
-Tree *RotacaoDirDupla(Tree *t)
-{
-    Tree *c = t;
-    Tree *a = c->left;
-    Tree *b = a->right;
-    c->left = b->right;
-    a->right = b->left;
-    b->left = a;
-    b->right = c;
-
-    switch (b->FB)
-    {
-    case -1:
-        a->FB = 0;
-        c->FB = 1;
-        break;
-    case 0:
-        a->FB = 0;
-        c->FB = 0;
-        break;
-    case +1:
-        a->FB = -1;
-        c->FB = 0;
-        break;
-    }
-    b->FB = 0;
-    t = b;
-    return t;
-}
-
-Tree *insert(Tree *t, int x, int *hMudou)
-{
     if (t == NULL)
     {
         t = (Tree *)malloc(sizeof(Tree));
-        t->info = x;
+        t->info = info;
         t->left = NULL;
         t->right = NULL;
         t->FB = 0;
@@ -371,17 +388,16 @@ Tree *insert(Tree *t, int x, int *hMudou)
     }
     else
     {
-        if (x <= t->info)
+        if ((t->info > info) || (t->info == info))
         {
-            t->left = insert(t->left, x, hMudou);
+            t->left = inserir(t->left, info, hMudou);
+
             if (*hMudou == 1)
             {
-
                 switch (t->FB)
-
                 {
                 case -1:
-                    t = Rotacaoright(t);
+                    t = rotacaoright(t);
                     *hMudou = 0;
                     break;
                 case 0:
@@ -397,14 +413,12 @@ Tree *insert(Tree *t, int x, int *hMudou)
         }
         else
         {
-            t->right = insert(t->right, x, hMudou);
+            t->right = inserir(t->right, info, hMudou);
             if (*hMudou == 1)
-
             {
                 switch (t->FB)
                 {
                 case -1:
-
                     t->FB = 0;
                     *hMudou = 0;
                     break;
@@ -413,7 +427,7 @@ Tree *insert(Tree *t, int x, int *hMudou)
                     *hMudou = 1;
                     break;
                 case +1:
-                    t = RotacaoEsq(t);
+                    t = rotacaoleft(t);
                     *hMudou = 0;
                     break;
                 }
@@ -423,23 +437,26 @@ Tree *insert(Tree *t, int x, int *hMudou)
     return t;
 }
 
-Tree *Remover(Tree *t, int x, int *hMudou)
+Tree *remover(Tree *t, int info, int *hMudou)
 {
     if (t != NULL)
     {
-        if (t->info == x)
+        if (t->info == info)
         {
-            if (t->left == NULL && t->right == NULL)
+
+            if ((t->left == NULL) && (t->right == NULL))
             {
                 free(t);
                 *hMudou = 1;
                 return NULL;
             }
-            else if (t->left == NULL || t->right == NULL)
+            else if ((t->left == NULL) || (t->right == NULL))
             {
                 Tree *aux;
                 if (t->left == NULL)
+                {
                     aux = t->right;
+                }
                 else
                     aux = t->left;
                 free(t);
@@ -448,11 +465,13 @@ Tree *Remover(Tree *t, int x, int *hMudou)
             }
             else
             {
-                Tree *bigger_left = t->left;
-                while (bigger_left->right != NULL)
-                    bigger_left = bigger_left->right;
-                t->info = bigger_left->info;
-                t->left = Remover(t->left, t->info, hMudou);
+                Tree *maiorleft = t->left;
+                while (maiorleft->right != NULL)
+                    maiorleft = maiorleft->right;
+
+                t->info = maiorleft->info;
+                t->left = remover(t->left, t->info, hMudou);
+
                 if (*hMudou == 1)
                 {
                     switch (t->FB)
@@ -466,9 +485,10 @@ Tree *Remover(Tree *t, int x, int *hMudou)
                         *hMudou = 0;
                         break;
                     case +1:
-                        int aux = t->right->FB;
-                        t = RotacaoEsq(t);
-                        if (aux == 0)
+                        int aux2 = t->right->FB;
+                        t = rotacaoleft(t);
+
+                        if (aux2 == 0)
                             *hMudou = 0;
                         else
                             *hMudou = 1;
@@ -477,9 +497,10 @@ Tree *Remover(Tree *t, int x, int *hMudou)
                 }
             }
         }
-        else if (x < t->info)
+        else if (t->info > info)
         {
-            t->left = Remover(t->left, x, hMudou);
+            t->left = remover(t->left, info, hMudou);
+
             if (*hMudou == 1)
             {
                 switch (t->FB)
@@ -493,9 +514,9 @@ Tree *Remover(Tree *t, int x, int *hMudou)
                     *hMudou = 0;
                     break;
                 case +1:
-                    int aux = t->right->FB;
-                    t = RotacaoEsq(t);
-                    if (aux == 0)
+                    int aux3 = t->right->FB;
+                    t = rotacaoleft(t);
+                    if (aux3 == 0)
                         *hMudou = 0;
                     else
                         *hMudou = 1;
@@ -505,7 +526,7 @@ Tree *Remover(Tree *t, int x, int *hMudou)
         }
         else
         {
-            t->right = Remover(t->right, x, hMudou);
+            t->right = remover(t->right, info, hMudou);
             if (*hMudou == 1)
             {
                 switch (t->FB)
@@ -519,9 +540,10 @@ Tree *Remover(Tree *t, int x, int *hMudou)
                     *hMudou = 0;
                     break;
                 case -1:
-                    int aux = t->left->FB;
-                    t = Rotacaoright(t);
-                    if (aux == 0)
+                    int aux4 = t->left->FB;
+                    t = rotacaoright(t);
+
+                    if (aux4 == 0)
                         *hMudou = 0;
                     else
                         *hMudou = 1;
@@ -529,8 +551,9 @@ Tree *Remover(Tree *t, int x, int *hMudou)
                 }
             }
         }
-        return t;
     }
+
+    return t;
 }
 
 void free_tree(Tree *t)
@@ -551,13 +574,13 @@ int main()
     while (condicao != 8)
     {
         printf("\n");
-        puts("1 - Ler a arvore de um arquivo fornecido pelo usuario");
-        puts("2 - Imprimir a arvore");
-        puts("3 - Verificar se um elemento x existe na arvore");
+        puts("1 - Ler a Tree de um arquivo fornecido pelo usuario");
+        puts("2 - Imprimir a Tree");
+        puts("3 - Verificar se um elemento x existe na Tree");
         puts("4 - Imprimir o nivel de um no x");
         puts("5 - Imprimir os nos folhas menores que um valor x");
-        puts("6 - insert um nó x na arvore");
-        puts("7 - removerr um no x da arvore");
+        puts("6 - inserir um nó x na Tree");
+        puts("7 - remover um no x da Tree");
         puts("8 - Sair");
 
         scanf("%d", &condicao);
@@ -566,7 +589,7 @@ int main()
         if (condicao == 1)
         {
             system("clear");
-            puts("1 - Ler a arvore de um arquivo fornecido pelo usuario");
+            puts("1 - Ler a Tree de um arquivo fornecido pelo usuario");
             printf("\n");
             printf("digite o nome do arquivo: ");
             char file_name[20];
@@ -578,7 +601,7 @@ int main()
         else if (condicao == 2)
         {
             system("clear");
-            puts("2 - Imprimir a arvore");
+            puts("2 - Imprimir a Tree");
             printf("\n");
             puts("Escolha a maneira que deseja imprimir:");
             puts("pre-order: 1");
@@ -603,18 +626,18 @@ int main()
         else if (condicao == 3)
         {
             system("clear");
-            puts("3 - Verificar se um elemento x existe na arvore");
+            puts("3 - Verificar se um elemento x existe na Tree");
             printf("\n");
             printf("Digite o elemento que deseja verificar: ");
             int elemento;
             scanf("%d", &elemento);
             if (exist(t, elemento))
             {
-                puts("O elemento digitado existe na arvore");
+                puts("O elemento digitado existe na Tree");
             }
             else
             {
-                puts("O elemento digitado nao existe na arvore");
+                puts("O elemento digitado nao existe na Tree");
             }
             printf("\n");
         }
@@ -630,7 +653,7 @@ int main()
             int level = level_node(t, 0, x);
             if (level == -1)
             {
-                puts("o no digitado nao existe na arvore");
+                puts("o no digitado nao existe na Tree");
             }
             else
             {
@@ -655,20 +678,20 @@ int main()
         else if (condicao == 6)
         {
             system("clear");
-            puts("6 - insert um nó x na arvore");
+            puts("6 - inserir um nó x na Tree");
             printf("\n");
-            printf("Qual valor que deseja insert: ");
+            printf("Qual valor que deseja inserir: ");
             int x;
             scanf("%d", &x);
-            t = insert(t, x, &hMudou);
+            t = inserir(t, x, &hMudou);
         }
 
         else if (condicao == 7)
         {
             system("clear");
-            puts("7 - removerr um no x da arvore");
+            puts("7 - removerr um no x da Tree");
             printf("\n");
-            printf("Digite o no que deseja removerr: ");
+            printf("Digite o no que deseja remover: ");
             int x;
             scanf("%d", &x);
             t = remover(t, x, &hMudou);
